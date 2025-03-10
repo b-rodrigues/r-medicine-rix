@@ -1,0 +1,223 @@
+---
+title: "Reproducible Data Science Environments with {rix}"
+author: "Bruno Rodrigues"
+format:
+  revealjs:
+    embed-resources: true
+    slide-number: true
+    theme: solarized
+    incremental: true
+  pptx:
+    freeze: true
+execute:
+  echo: true
+---
+
+## Intro: Who am I
+
+Bruno Rodrigues, head of the statistics and data strategy departments at the Ministry of Research and Higher education in Luxembourg
+
+## Intro: Who am I
+
+![](images/luxembourg.png){fig-align="center"}
+
+
+## Intro: Who am I
+
+Slides available online at []()
+
+Code available at: [https://github.com/b-rodrigues/r-medicine-rix](https://github.com/b-rodrigues/r-medicinedrix)
+
+## Things I want to talk about
+
+-   Identify *what* must be managed for reproducibility
+-   Give a short intro to {rix} and Nix
+
+## What I mean by *reproducibility*
+
+-   Ability to recover *exactly* the same results from an analysis
+
+## Turning our analysis reproducible
+
+We need to answer these questions
+
+. . .
+
+1. How easy would it be for someone else to rerun the analysis?
+2. How easy would it be to update the project?
+3. How easy would it be to reuse this code for another project?
+4. What guarantee do we have that the output is stable through time?
+
+## Reproducibility is on a continuum (1/2)
+
+Here are the 4 main things influencing an analysis' reproducibility:
+
+-   Version of R used
+-   Versions of packages used
+-   Operating system
+-   Hardware
+
+## Reproducibility is on a continuum (2/2)
+
+![](images/repro_spectrum.png){fig-align="center"}
+
+Source: Peng, Roger D. 2011. "Reproducible Research in Computational Science." Science 334 (6060): 1226--27
+
+## Recording packages with {renv} 1/2
+
+Most popular package for reproducibility, and very easy to use:
+
+- Open an R session in the folder containing the scripts
+- Run `renv::init()` and check the folder for `renv.lock`
+
+## Recording packages with {renv} 2/2
+
+- But:
+
+1. Records, but does not restore the version of R
+2. Installation of old packages can fail (due to missing OS-dependencies)
+
+## Going further with Docker: handling R and system-level dependencies
+
+- Docker is a containerisation tool that you install on your computer
+- Docker allows you to build *images* and run *containers* (a container is an instance of an image)
+- Docker images:
+    1. contain all the software and code needed for your project
+    2. are immutable (cannot be changed at run-time)
+    3. can be shared on- and offline
+
+## Docker: a panacea?
+
+- Docker is very useful and widely used
+- But the entry cost is high (familiarity with Linux is recommended)
+- Single point of failure (what happens if Docker gets bought, abandoned, etc? **quite unlikely though**)
+- Not actually dealing with reproducibility per se, we're "abusing" Docker in a way
+- Btw, check out the [Rocker project](https://rocker-project.org/images/versioned/r-ver.html) 
+
+## The Nix package manager (1/2)
+
+Package manager: tool to install and manage *packages*
+
+Package: any piece of software (not just R packages)
+
+A popular package manager:
+
+. . .
+
+![Google Play Store](images/play_store.png)
+
+## The Nix package manager (2/2)
+
+- Gold standard of reproducibilit: R, R packages and other dependencies must be managed
+- Nix is a package manager actually focused on reproducible builds
+- Nix deals with everything, with one single text file (called a Nix expression)!
+- These Nix expressions *always* build the exact same output
+
+## rix: reproducible development environments with Nix (1/5)
+
+- `{rix}` ([website](https://docs.ropensci.org/rix/)) makes writing Nix expression easy!
+- Simply use the provided `rix()` function:
+
+. . .
+
+```{r, eval = FALSE}
+library(rix)
+
+rix(date = "2025-01-27",
+    r_pkgs = c("dplyr", "ggplot2"),
+    system_pkgs = NULL,
+    git_pkgs = NULL,
+    tex_pkgs = NULL,
+    ide = "code",
+    project_path = ".")
+```
+
+## rix: reproducible development environments with Nix (2/5)
+
+- `renv.lock` files can also be used as starting points:
+
+. . . 
+
+```
+library(rix)
+
+renv2nix(
+  renv_lock_path = "path/to/original/renv_project/renv.lock",
+  project_path = "path/to/rix_project",
+  override_r_ver = "4.4.1" # <- optional
+)
+
+```
+
+## rix: reproducible development environments with Nix (3/5)
+
+- List required R version and packages
+- Optionally: more system packages, packages hosted on Github, or LaTeX packages
+- Optionally: an IDE (Rstudio, Radian, VS Code or "other")
+- Work interactively in an (relavitely) isolated, project-specific and reproducible environment!
+
+## rix: reproducible development environments with Nix (4/5)
+
+- `rix::rix()` generates a `default.nix` file
+- Build expressions using `nix-build` (in terminal) or `rix::nix_build()` from R 
+- "Drop" into the development environment using `nix-shell`
+- Expressions can be generated even without Nix installed (with some caveats)
+
+## rix: reproducible development environments with Nix (5/5)
+
+- Can install specific versions of packages (write `"dplyr@1.0.0"`)
+- Can install packages hosted on Github
+- Many vignettes to get you started! [See here](https://docs.ropensci.org/rix/articles/)
+
+. . .
+
+Let's check out `scripts/nix_expressions/rix_intro/`
+
+## Non-interactive use
+
+- `{rix}` makes it easy to run pipelines in the right environment
+- (Little side note: the best tool to build pipelines in R is `{targets}`)
+- See `scripts/nix_expressions/nix_targets_pipeline`
+- Can also run the pipeline like so:
+
+. . .
+
+```
+cd /absolute/path/to/pipeline/ && nix-shell default.nix --run "Rscript -e 'targets::tar_make()'"
+```
+
+## Nix and Github Actions: running pipelines
+
+- Possible to easily run a `{targets}` pipeline on Github actions
+- Simply run `rix::tar_nix_ga()` to generate the required files
+- Commit and push, and watch the actions run!
+- See [here](https://github.com/b-rodrigues/nix_targets_pipeline/tree/master).
+
+## Nix and Github Actions: writing papers
+
+- Easy collaboration on papers as well
+- See [here](https://github.com/b-rodrigues/rix_paper/tree/master)
+- Just focus on writing!
+
+## Conclusion
+
+- Very vast and complex topic!
+- At the very least, generate an `renv.lock` file
+- Always possible to rebuild a Docker image in the future (either you, or someone else!)
+- Consider using `{targets}`: not only good for reproducibility, but also an amazing tool all around
+- Long-term reproducibility: must use Docker or Nix (better: both!) and maintenance effort is required as well
+
+## The end
+
+Contact me if you have questions:
+
+- bruno@brodrigues.co
+- Twitter: @brodriguesco
+- Mastodon: @brodriguesco@fosstodon.org
+- Blog: www.brodrigues.co
+- Book: www.raps-with-r.dev
+- rix: https://docs.ropensci.org/rix
+
+. . .
+
+Thank you!
