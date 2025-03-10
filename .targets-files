@@ -67,6 +67,7 @@
 .quarto/xref/INDEX
 .quarto/xref/b691fda7
 .targets-files
+.targets-runs/
 _freeze/index/execute-results/pptx.json
 _freeze/index/libs/revealjs/dist/reset.css
 _freeze/index/libs/revealjs/dist/reveal.css
