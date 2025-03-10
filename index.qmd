@@ -1,5 +1,5 @@
 ---
-title: "What’s up with reproducibility in R?"
+title: "Reproducible Data Science Environments with {rix}"
 author: "Bruno Rodrigues"
 format:
   revealjs:
@@ -17,51 +17,27 @@ execute:
 
 Bruno Rodrigues, head of the statistics and data strategy departments at the Ministry of Research and Higher education in Luxembourg
 
-Slides available online at [https://is.gd/repro_boe](https://is.gd/repro_boe)
+## Intro: Who am I
 
-Code available at: [https://github.com/b-rodrigues/repro_boe](https://github.com/b-rodrigues/repro_boe)
+![](images/luxembourg.png){fig-align="center"}
 
-## Thing I want to talk about
+
+## Intro: Who am I
+
+Slides available online at []()
+
+Code available at: [https://github.com/b-rodrigues/r-medicine-rix](https://github.com/b-rodrigues/r-medicinedrix)
+
+## Things I want to talk about
 
 -   Identify *what* must be managed for reproducibility
--   Learn about the following tools to turn your projects reproducible
-    * {renv}, Docker and Nix
-
--   What I will *not* discuss (but is very useful!):
-    * FP, Git, Documenting, testing and packaging code, build automation with {targets}
+-   Give a short intro to {rix} and Nix
 
 ## What I mean by *reproducibility*
 
 -   Ability to recover *exactly* the same results from an analysis
--   Why would you want that?
--   Auditing purposes
--   Update of data (only impact must be from data update)
--   Reproducibility as a cornerstone of science
--   (Work on an immutable dev environment)
-. . .
--   "But if I have the original script and data, what's the problem?"
 
-## A typical project’s setup
-
-- Our project: housing in Luxembourg
-- Data to analyse: `vente-maison-2010-2021.xlsx` in the `data` folder
-- 2 scripts to analyse data (in the `scripts/project_start` folder):
-  1. One to scrape the Excel file [save_data.R](https://raw.githubusercontent.com/b-rodrigues/rap4all/master/scripts/save_data.R)
-  2. One to analyse the data  [analysis.R](https://raw.githubusercontent.com/b-rodrigues/rap4all/master/scripts/analysis.R)
-
-## Project start - What's wrong with these scripts?
-
-- The first two scripts -> script-based workflow
-- Just a long series of calls
-- No functions
-  * difficult to re-use!
-  * difficult to test!
-  * difficult to parallelise!
-  * lots of repetition!
-- Also: usually we want a report not just a script
-- No record of package, nor R, versions used
-
-## Turning our scripts reproducible
+## Turning our analysis reproducible
 
 We need to answer these questions
 
@@ -87,78 +63,19 @@ Here are the 4 main things influencing an analysis' reproducibility:
 
 Source: Peng, Roger D. 2011. "Reproducible Research in Computational Science." Science 334 (6060): 1226--27
 
-## Recording packages and R version used with renv
+## Recording packages with {renv} 1/2
 
-Create a `renv.lock` file in 2 steps!
+Most popular package for reproducibility, and very easy to use:
 
 - Open an R session in the folder containing the scripts
 - Run `renv::init()` and check the folder for `renv.lock`
 
-. . .
+## Recording packages with {renv} 2/2
 
-(`renv::init()` will take some time to run the first time)
-
-## What an `renv.lock` file looks like
-
-. . .
-
-```
-{
-"R": {
-  "Version": "4.2.2",
-  "Repositories": [
-  {
-   "Name": "CRAN",
-   "URL": "https://packagemanager.rstudio.com/all/latest"
-  }
-  ]
-},
-"Packages": {
-  "MASS": {
-    "Package": "MASS",
-    "Version": "7.3-58.1",
-    "Source": "Repository",
-    "Repository": "CRAN",
-    "Hash": "762e1804143a332333c054759f89a706",
-    "Requirements": []
-  },
-  "Matrix": {
-    "Package": "Matrix",
-    "Version": "1.5-1",
-    "Source": "Repository",
-    "Repository": "CRAN",
-    "Hash": "539dc0c0c05636812f1080f473d2c177",
-    "Requirements": [
-      "lattice"
-    ]
-
-    ***and many more packages***
-```
-
-## Restoring a library using an `renv.lock` file
-
-- `renv.lock` file not just a record
-- Can be used to restore as well!
-- Run `renv::restore()`
-
-## `{renv}` conclusion
-
-Shortcomings:
-
-. . .
+- But:
 
 1. Records, but does not restore the version of R
 2. Installation of old packages can fail (due to missing OS-dependencies)
-
-. . .
-
-but... :
-
-. . .
-
-1. Generating a `renv.lock` file is "free"
-2. Provides a blueprint for dockerizing our pipeline
-3. Creates a project-specific library (no interferences)
 
 ## Going further with Docker: handling R and system-level dependencies
 
@@ -169,60 +86,13 @@ but... :
     2. are immutable (cannot be changed at run-time)
     3. can be shared on- and offline
 
-## "Hello, Docker!"
-
-- Start by creating a so-called Dockerfile 
-- Dockerfile = recipe for an image, starts off an existing **base image**
-- Build the image: `docker build -t hello .`
-- Run a container: `docker run --rm --name hello_container hello`
-- `--rm`: remove the container after running
-- `--name some_name`: name your container `some_name`
-
-## Without Docker
-
-![](images/without_docker.png){fig-align="center"}
-
-## With Docker
-
-![](images/with_docker.png){fig-align="center"}
-
-## Dockerizing a project (1/3)
-
-- At image build-time:
-  1. install R (or use an image that ships R)
-  2. install packages (using our `renv.lock` file)
-  3. copy all scripts to the image
-  4. run the analysis using `targets::tar_make()`
-
-- At container run-time:
-  1. copy the outputs of the analysis from the container to your computer
-  2. possible to "log-in" into a running container to inspect code and outputs
-
-## Dockerizing a project (2/3)
-
-- The completed and built image can be shared, or just the Dockerfile (and users can then rebuild the image)
-- The outputs will always stay the same!
-- Working interactively using Docker can be challenging though
-
-## Dockerizing a project (3/3)
-
-- But! Image build process not reproducible per se, only running containers is
-- YOU need to make sure build process is reproducible (or store the built images)
-  1. Need to fix version of R
-  2. Base image layer becomes unsupported at some point
-
-## The Rocker project
-
-- It is possible to build new images from other images
-- The Rocker project provides many images with R, RStudio, Shiny, and other packages pre-installed
-- I recommend the ["r-ver"](https://rocker-project.org/images/versioned/r-ver.html) images, specifically made for reproducibility
-
 ## Docker: a panacea?
 
 - Docker is very useful and widely used
 - But the entry cost is high (familiarity with Linux is recommended)
 - Single point of failure (what happens if Docker gets bought, abandoned, etc? **quite unlikely though**)
 - Not actually dealing with reproducibility per se, we're "abusing" Docker in a way
+- Btw, check out the [Rocker project](https://rocker-project.org/images/versioned/r-ver.html) 
 
 ## The Nix package manager (1/2)
 
@@ -238,100 +108,10 @@ A popular package manager:
 
 ## The Nix package manager (2/2)
 
-- Reproducibility: R, R packages and other dependencies must be managed
+- Gold standard of reproducibilit: R, R packages and other dependencies must be managed
 - Nix is a package manager actually focused on reproducible builds
 - Nix deals with everything, with one single text file (called a Nix expression)!
 - These Nix expressions *always* build the exact same output
-
-## A basic Nix expression (1/6)
-
-```
-let
-  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/976fa3369d722e76f37c77493d99829540d43845.tar.gz") {};
-  system_packages = builtins.attrValues {
-    inherit (pkgs) R ;
-  };
-in
-  pkgs.mkShell {
-    buildInputs = [ system_packages ];
-    shellHook = "R --vanilla";
-  }
-```
-
-There's a lot to discuss here!
-
-## A basic Nix expression (2/6)
-
-- Written in the Nix language (not discussed)
-- Defines the repository to use (with a fixed revision)
-- Lists packages to install
-- Defines the output: a development shell
-
-## A basic Nix expression (3/6)
-
-- Software for Nix is defined as a mono-repository of tens of thousands of expressions on Github
-- Github: we can use any commit to pin package versions for reproducibility!
-- For example, the following commit installs R 4.3.1 and associated packages:
-
-. . .
-
-```
-pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/976fa3369d722e76f37c77493d99829540d43845.tar.gz") {};
-```
-
-- Let's take a look at the [repository](https://github.com/NixOS/nixpkgs)...
-
-## A basic Nix expression (4/6)
-
-- `system_packages`: a variable that lists software to install
-- In this case, only R:
-
-. . .
-
-```
-system_packages = builtins.attrValues {
-  inherit (pkgs) R ;
-};
-```
-
-## A basic Nix expression (5/6)
-
-- Finally, we define a shell:
-
-. . .
-
-```
-pkgs.mkShell {
-  buildInputs = [ system_packages ];
-  shellHook = "R --vanilla";
-}
-```
-
-. . .
-
-- This shell will come with the software defined in `system_packages` (`buildInputs`)
-- And launch `R --vanilla` when started (`shellHook`)
-
-## A basic Nix expression (6/6)
-
-- Writing these expressions requires learning a new language
-- While incredibly powerful, if all we want are per-project reproducible dev shells...
-- ...then `{rix}` will help!
-
-## Nix expressions
-
-- Nix expressions can be used to install software
-- But we will use them to build per-project development shells
-- We will include R, LaTeX packages, or Quarto, Python, Julia....
-- Nix takes care of installing every dependency down to the compiler!
-
-## CRAN and Bioconductor
-
-- CRAN is the repository of R packages to extend the language
-- As of writing, +20000 packages available
-- Biocondcutor: repository with a focus on Bioinformatics: +2000 more packages
-- Almost all available through `nixpkgs` in the `rPackages` set!
-- Find packages [here](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=dplyr)
 
 ## rix: reproducible development environments with Nix (1/5)
 
@@ -343,8 +123,7 @@ pkgs.mkShell {
 ```{r, eval = FALSE}
 library(rix)
 
-rix(r_ver = "4.3.1",
-    #date = "2025-01-27", <- a date also works
+rix(date = "2025-01-27",
     r_pkgs = c("dplyr", "ggplot2"),
     system_pkgs = NULL,
     git_pkgs = NULL,
@@ -375,14 +154,14 @@ renv2nix(
 - List required R version and packages
 - Optionally: more system packages, packages hosted on Github, or LaTeX packages
 - Optionally: an IDE (Rstudio, Radian, VS Code or "other")
-- Work interactively in an isolated, project-specific and reproducible environment!
+- Work interactively in an (relavitely) isolated, project-specific and reproducible environment!
 
 ## rix: reproducible development environments with Nix (4/5)
 
 - `rix::rix()` generates a `default.nix` file
 - Build expressions using `nix-build` (in terminal) or `rix::nix_build()` from R 
 - "Drop" into the development environment using `nix-shell`
-- Expressions can be generated even without Nix installed
+- Expressions can be generated even without Nix installed (with some caveats)
 
 ## rix: reproducible development environments with Nix (5/5)
 
