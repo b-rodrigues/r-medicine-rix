@@ -24,7 +24,7 @@ Bruno Rodrigues, head of the statistics and data strategy departments at the Min
 
 ## Intro: Who am I
 
-Slides available online at []()
+Slides available online at [https://b-rodrigues.github.io/r-medicine-rix](https://b-rodrigues.github.io/r-medicine-rix)
 
 Code available at: [https://github.com/b-rodrigues/r-medicine-rix](https://github.com/b-rodrigues/r-medicinedrix)
 
