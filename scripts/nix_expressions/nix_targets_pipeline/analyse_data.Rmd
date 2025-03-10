@@ -1,0 +1,43 @@
+---
+title: "Nominal house prices data in Luxembourg"
+author: "Bruno Rodrigues"
+date: "`r Sys.Date()`"
+---
+
+
+Let’s load the datasets (the Laspeyeres price index is already computed):
+
+```{r}
+tar_load(commune_data)
+tar_load(country_data)
+```
+
+We are going to create a plot for 5 communes and compare the price evolution in the communes
+to the national price evolution. Let’s first load the communes:
+
+```{r}
+tar_load(communes)
+```
+
+```{r, results = "asis"}
+res <- lapply(communes, function(x){
+
+  knitr::knit_child(text = c(
+
+    '\n',
+    '## Plot for commune: `r x`',
+    '\n',
+    '```{r, echo = F}',
+    'print(make_plot(country_data, commune_data, x))',
+    '```'
+
+     ),
+     envir = environment(),
+     quiet = TRUE)
+
+})
+
+cat(unlist(res), sep = "\n")
+
+```
+
