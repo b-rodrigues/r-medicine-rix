@@ -108,7 +108,7 @@ A popular package manager:
 
 ## The Nix package manager (2/2)
 
-- Gold standard of reproducibilit: R, R packages and other dependencies must be managed
+- Gold standard of reproducibility: R, R packages and other dependencies must be managed
 - Nix is a package manager actually focused on reproducible builds
 - Nix deals with everything, with one single text file (called a Nix expression)!
 - These Nix expressions *always* build the exact same output
