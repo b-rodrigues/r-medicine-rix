@@ -1,8 +1,10 @@
 library(rix)
 
-rix(r_ver = "4.3.1",
-    r_pkgs = c("dplyr", "ggplot2"),
-    ide = "other",
-    project_path = ".",
-	shell_hook = "R",
-    overwrite = TRUE)
+rix(
+  date = "2025-04-29",
+  r_pkgs = c("dplyr", "ggplot2"),
+  ide = "none",
+  project_path = ".",
+  shell_hook = "R",
+  overwrite = TRUE
+)
