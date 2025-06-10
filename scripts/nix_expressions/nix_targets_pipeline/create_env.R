@@ -9,7 +9,7 @@ rix(r_ver = "4.2.2",
                    branch_name = "fusen",
                    commit = "1c860959310b80e67c41f7bbdc3e84cef00df18e")
       ),
-    ide = "other",
+    ide = "none",
     shell_hook = "Rscript -e 'targets::tar_make()'",
     project_path = ".",
     overwrite = TRUE)
